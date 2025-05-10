@@ -1,0 +1,95 @@
+# Target development environment: macOS
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "memoria-mcp" # Rule 8 (User): short, all lowercase, hyphens
+version = "0.1.0" # Rule 7 (User): Semantic Versioning
+description = "MCP server for managing memories with PostgreSQL backend."
+readme = "README.md" # To be created
+requires-python = ">=3.12.10, <3.13" # Rule 1 (Project): Python 3.12.10
+license = { text = "MIT" }
+authors = [
+    { name = "Jien Huang", email = "huangjien@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12.10",
+    "Framework :: FastMCP", # Based on project description
+    "Topic :: Database",
+    "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
+]
+dependencies = [
+    "fastmcp~=2.3.3",    # Rule 2 (Project): FastMCP 2.0.x
+    "asyncpg==0.29.0",   # Compatible with Python 3.12.10
+    # "pgvector~=0.4.0", # Rule 4 (Project): pgvector 0.4.x (optional)
+    # "pydantic",        # Likely needed for schemas, add if used
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.1.0",         # Rule 1 (Testing)
+    "pytest-asyncio",        # For async tests
+    "pytest-postgresql",     # Rule 2 (Testing)
+    "pytest-mock",           # Rule 3 (Testing)
+    "pytest-cov",            # For test coverage
+    "psycopg-binary",        # For pytest-postgresql, to avoid build issues
+    "flake8",                # Rule 6 (User), Rule 3 (Code Style)
+    "black==24.4.2",         # Rule 6 (User), Rule 3 (Code Style)
+    "mypy==1.10.0",          # Rule 10 (User), Rule 3 (Code Style)
+    "uv>=0.6.0",             # Rule 5 (Project): uv for env management
+]
+
+# [project.scripts]
+# memoria-server = "src.main:app" # Example CLI entry point
+
+[tool.black]
+line-length = 79 # Rule 5 (User)
+target-version = ["py312"]
+
+[tool.mypy]
+
+python_version = "3.12.10"
+warn_return_any = true
+warn_unused_configs = true
+# Rule 3 (Code Style): strict settings
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+# strict_equality = true # Can be noisy, enable if desired
+
+# Ignore missing stubs for third-party libraries if they cause issues
+[[tool.mypy.overrides]]
+warn_return_any = true
+warn_unused_configs = true
+module = [
+    "fastmcp.*",
+    "asyncpg.*",
+    "pytest_postgresql.*",
+    "pytest_mock.*"
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+# Rule 1 (Testing): --strict-markers and --maxfail=1
+addopts = "--strict-markers --maxfail=1 -ra -q"
+python_files = "test_*.py tests_*.py"
+python_classes = "*Tests Test*"
+python_functions = "test_*"
+log_cli = true
+log_cli_level = "INFO"
+
+# [tool.uv]
+# uv primarily uses pyproject.toml for dependency resolution.
+# Specific uv configurations can be added here if needed.

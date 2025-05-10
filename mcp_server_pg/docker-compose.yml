@@ -1,0 +1,70 @@
+# Target development environment: macOS
+# Rule 4 (User): Platform Declaration
+# Rule 1 (Deployment): Docker Compose (Compose v3.8)
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14 # As per design.md
+    environment:
+      # Rule 3 (Credential Management): Load credentials via env vars
+      # These are for the Docker Compose internal network.
+      # For local development outside Docker, separate env vars are needed.
+      POSTGRES_USER: ${DB_USER:-memory_user} # Default if not set in .env
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret_password}
+      POSTGRES_DB: ${DB_NAME:-memoria_db}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      # Expose PostgreSQL port to host for local tools if needed
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - mcp-network
+    # Healthcheck for postgres can be added for better startup orchestration
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-memory_user} -d ${DB_NAME:-memoria_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres: # Ensures postgres is healthy before mcp-server starts
+        condition: service_healthy
+    environment:
+      # Pass database connection details to the MCP server application
+      # These should match what pool.py expects if DSN is not used directly
+      DB_USER: ${DB_USER:-memory_user}
+      DB_PASSWORD: ${DB_PASSWORD:-secret_password}
+      DB_HOST: postgres # Service name within Docker network
+      DB_PORT: 5432 # Standard PostgreSQL port
+      DB_NAME: ${DB_NAME:-memoria_db}
+      # PYTHONUNBUFFERED: 1 # Already in Dockerfile
+      # PYTHONDONTWRITEBYTECODE: 1 # Already in Dockerfile
+    ports:
+      - "${MCP_PORT:-8000}:8000" # Expose MCP server port to host
+    networks:
+      - mcp-network
+    # Add volumes for development to enable live reloading if supported
+    # volumes:
+    #   - ./src:/app/src # Mount src directory for live code changes
+
+volumes:
+  pgdata: # Persists PostgreSQL data across `docker-compose down/up`
+
+networks:
+  mcp-network:
+    driver: bridge
+
+# Note: Create a .env file in the same directory as docker-compose.yml
+# to customize environment variables like DB_USER, DB_PASSWORD, DB_NAME, DB_PORT, MCP_PORT.
+# Example .env file:
+# DB_USER=myuser
+# DB_PASSWORD=mypassword
+# DB_NAME=mydb
+# DB_PORT=5433 # If you want to expose postgres on a different host port
+# MCP_PORT=8001 # If you want to expose mcp-server on a different host port

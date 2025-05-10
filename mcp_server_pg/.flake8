@@ -1,0 +1,66 @@
+# Target development environment: macOS
+# Rule 4 (User): Platform Declaration
+
+[flake8]
+# Rule 5 (User): Line length for code is 79 chars.
+# Rule 5 (User): Line length for docstrings is 72 chars (for comments).
+# Flake8 itself doesn't distinguish between code and docstring lines for max-line-length,
+# so we set it to the stricter of the two that applies to code, which is 79.
+# Docstring length (72) should be manually adhered to or checked by other tools if possible.
+max-line-length = 79
+
+# Rule 6 (User): Adhere strictly to PEP 8
+# Default flake8 checks cover most of PEP 8.
+# We can extend with plugins if needed, e.g., flake8-docstrings for Google style.
+
+# Ignore specific errors/warnings if necessary. For example:
+# ignore = E203, E266, E501, W503, F401
+# E203: whitespace before ':' (often conflicts with Black)
+# W503: line break before binary operator (Black prefers after)
+# It's common to let Black handle formatting and tell flake8 to ignore related warnings.
+
+# For compatibility with Black:
+# https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html#flake8
+# It's often recommended to use flake8 primarily for logic/error checks
+# and let Black handle all formatting.
+# Common ignores when using Black:
+# E203: whitespace before ':'
+# E231: missing whitespace after ',' (sometimes)
+# E501: line too long (Black handles this, but good to keep for awareness)
+# W503: line break before binary operator (Black does the opposite)
+# We will start with a minimal set of ignores and adjust as needed.
+ignore =
+    E203, # Whitespace before ':' - Black handles this
+    W503, # Line break before binary operator - Black prefers after
+    # E501 is not ignored by default to still get warnings, Black will fix it.
+
+# Consider adding plugins for more comprehensive checks:
+# - flake8-bugbear: finds likely bugs and design problems
+# - flake8-comprehensions: helps write better list/set/dict comprehensions
+# - flake8-docstrings: checks docstring style (e.g., Google, numpy)
+#   - pydocstyle can also be used for this, often configured separately or via pyproject.toml
+# - flake8-import-order: checks import order (though isort is often preferred)
+
+# Example for flake8-docstrings (if installed and using Google style):
+# docstring-convention = google
+
+# Exclude files/directories:
+exclude =
+    .git,
+    __pycache__,
+    build,
+    dist,
+    venv,
+    .venv,
+    env,
+    .env,
+    migrations,
+    # Add other specific directories or files if needed
+
+# Per-file ignores can be useful for specific cases:
+# per-file-ignores =
+#     src/legacy_code.py:E501,F401
+#     tests/*:S101  # e.g. ignore assert statements in tests for flake8-bandit
+
+# Max complexity for McCabe cyclomatic complexity checker (default is 10)
+max-complexity = 10
